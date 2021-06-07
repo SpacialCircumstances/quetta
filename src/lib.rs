@@ -3,6 +3,8 @@ use std::fmt::{Debug, Formatter, Display};
 use std::str::FromStr;
 use std::hash::{Hash, Hasher};
 use std::borrow::Borrow;
+use std::ops::{Index, Range};
+use std::slice::SliceIndex;
 
 #[derive(Clone)]
 struct IString(Rc<str>);
@@ -91,6 +93,14 @@ impl<'a> AsRef<str> for &'a Text {
 impl<'a> Borrow<str> for &'a Text {
     fn borrow(&self) -> &str {
         self.as_str()
+    }
+}
+
+impl<'a, Idx: SliceIndex<str>> Index<Idx> for &'a Text {
+    type Output = Idx::Output;
+
+    fn index(&self, index: Idx) -> &Self::Output {
+        &self.as_str()[index]
     }
 }
 
