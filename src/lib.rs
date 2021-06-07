@@ -120,7 +120,7 @@ impl Text {
 
     pub fn substring(&self, start: usize, len: usize) -> Text {
         if start + len > self.len() {
-            panic!(format!("Slice index out of bounds: Length of string is {}, but slice start was {} and slice length was {}", self.len(), start, len))
+            panic!("Slice index out of bounds: Length of string is {}, but slice start was {} and slice length was {}", self.len(), start, len)
         }
         match &self.0 {
             TextData::Entire(s) => Self(TextData::Slice {
@@ -146,5 +146,13 @@ impl Text {
 
     pub fn len(&self) -> usize {
         self.as_str().len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.as_str().is_empty()
+    }
+
+    pub fn chars<'a>(&'a self) -> impl Iterator<Item = char> + 'a {
+        self.as_str().chars()
     }
 }
