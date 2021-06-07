@@ -1,10 +1,10 @@
-use std::rc::Rc;
-use std::fmt::{Debug, Formatter, Display};
-use std::str::FromStr;
-use std::hash::{Hash, Hasher};
 use std::borrow::Borrow;
-use std::ops::{Index, Range};
+use std::fmt::{Debug, Display, Formatter};
+use std::hash::{Hash, Hasher};
+use std::ops::Index;
+use std::rc::Rc;
 use std::slice::SliceIndex;
+use std::str::FromStr;
 
 #[derive(Clone)]
 struct IString(Rc<str>);
@@ -12,7 +12,11 @@ struct IString(Rc<str>);
 #[derive(Clone)]
 enum TextData {
     Entire(IString),
-    Slice { string: IString, start: usize, len: usize }
+    Slice {
+        string: IString,
+        start: usize,
+        len: usize,
+    },
 }
 
 pub struct Text(TextData);
@@ -78,7 +82,7 @@ impl<'a> From<&'a Text> for &'a str {
             TextData::Entire(s) => &*s.0,
             TextData::Slice { string, start, len } => {
                 let s = &*string.0;
-                &s[*start..*start+*len]
+                &s[*start..*start + *len]
             }
         }
     }
@@ -112,5 +116,32 @@ impl Text {
 
     pub fn as_str(&self) -> &str {
         self.into()
+    }
+
+    pub fn substring(&self, start: usize, len: usize) -> Text {
+        match &self.0 {
+            TextData::Entire(s) => Self(TextData::Slice {
+                string: s.clone(),
+                start,
+                len,
+            }),
+            TextData::Slice {
+                string,
+                start: s2,
+                len: _,
+            } => Self(TextData::Slice {
+                string: string.clone(),
+                start: s2 + start,
+                len,
+            }),
+        }
+    }
+
+    pub fn slice(&self, start: usize, end: usize) -> Text {
+        self.substring(start, end - start)
+    }
+
+    pub fn len(&self) -> usize {
+        self.as_str().len()
     }
 }
