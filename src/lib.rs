@@ -119,6 +119,9 @@ impl Text {
     }
 
     pub fn substring(&self, start: usize, len: usize) -> Text {
+        if start + len > self.len() {
+            panic!(format!("Slice index out of bounds: Length of string is {}, but slice start was {} and slice length was {}", self.len(), start, len))
+        }
         match &self.0 {
             TextData::Entire(s) => Self(TextData::Slice {
                 string: s.clone(),
