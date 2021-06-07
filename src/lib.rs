@@ -108,6 +108,26 @@ impl<'a, Idx: SliceIndex<str>> Index<Idx> for &'a Text {
     }
 }
 
+pub struct SplitIter<'a> {
+    text: &'a Text,
+    position: usize,
+    find: &'a str,
+}
+
+impl<'a> Iterator for SplitIter<'a> {
+    type Item = Text;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.text.as_str()[self.position..].find(self.find) {
+            None => None,
+            Some(idx) => {
+                self.position = idx;
+                Some(self.text.substring(idx, self.find.len()))
+            }
+        }
+    }
+}
+
 impl Text {
     pub fn new<'a, I: Into<&'a str>>(s: I) -> Self {
         let inner = IString(Rc::from(s.into()));
@@ -154,5 +174,13 @@ impl Text {
 
     pub fn chars<'a>(&'a self) -> impl Iterator<Item = char> + 'a {
         self.as_str().chars()
+    }
+
+    pub fn split<'a>(&'a self, pat: &'a str) -> impl Iterator<Item = Text> + 'a {
+        SplitIter {
+            text: self,
+            position: 0,
+            find: pat,
+        }
     }
 }
