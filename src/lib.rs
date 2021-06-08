@@ -191,6 +191,24 @@ impl Text {
             find: pat,
         }
     }
+
+    pub fn lift<F: Fn(&str) -> &str>(&self, f: F) -> Option<Text> {
+        let s = self.as_str();
+        let res = f(s);
+        get_offset(s, res).map(|offset| self.substring(offset, res.len()))
+    }
+}
+
+fn get_offset(original: &str, slice: &str) -> Option<usize> {
+    let orig_pos = original.as_ptr() as usize;
+    let orig_end = orig_pos + original.len();
+    let slice_pos = slice.as_ptr() as usize;
+    let slice_end = slice_pos + slice.len();
+    if slice_pos < orig_pos || slice_end > orig_end {
+        None
+    } else {
+        Some(slice_pos - orig_pos)
+    }
 }
 
 #[cfg(test)]
@@ -226,13 +244,9 @@ mod tests {
     }
 
     #[test]
-    pub fn test_split() {
-        let t = Text::new("a,b,c,d,");
-        let mut elements = t.split(",");
-        assert_eq!("a", elements.next().unwrap().as_str());
-        assert_eq!("b", elements.next().unwrap().as_str());
-        assert_eq!("c", elements.next().unwrap().as_str());
-        assert_eq!("d", elements.next().unwrap().as_str());
-        assert_eq!("", elements.next().unwrap().as_str());
+    pub fn test_lift() {
+        let t = Text::new(" TEST  ");
+        let trimmed = t.lift(|t| t.trim()).expect("Lifting failed");
+        assert_eq!("TEST", trimmed.as_str());
     }
 }
