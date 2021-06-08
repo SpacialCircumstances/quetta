@@ -202,6 +202,12 @@ impl Text {
         self.lift_slice(res)
     }
 
+    pub fn try_lift<F: Fn(&str) -> &str>(&self, f: F) -> Text {
+        let s = self.as_str();
+        let res = f(s);
+        self.lift_slice(res).unwrap_or_else(|| Text::new(res))
+    }
+
     pub fn lift_many<'a, I: Iterator<Item = &'a str> + 'a, F: Fn(&str) -> I>(
         &'a self,
         f: F,
@@ -209,6 +215,15 @@ impl Text {
         let s = self.as_str();
         let res = f(s);
         res.map(move |s| self.lift_slice(s).expect("Failed to lift slice"))
+    }
+
+    pub fn try_lift_many<'a, I: Iterator<Item = &'a str> + 'a, F: Fn(&str) -> I>(
+        &'a self,
+        f: F,
+    ) -> impl Iterator<Item = Text> + 'a {
+        let s = self.as_str();
+        let res = f(s);
+        res.map(move |s| self.lift_slice(s).unwrap_or_else(|| Text::new(s)))
     }
 }
 
