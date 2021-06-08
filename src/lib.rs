@@ -208,7 +208,7 @@ impl Text {
         self.lift_slice(res).unwrap_or_else(|| Text::new(res))
     }
 
-    pub fn try_lift_many<'a, I: Iterator<Item = &'a str> + 'a, F: Fn(&str) -> I>(
+    pub fn try_lift_many<'a, I: Iterator<Item = &'a str> + 'a, F: Fn(&'a str) -> I>(
         &'a self,
         f: F,
     ) -> impl Iterator<Item = Text> + 'a {
@@ -217,7 +217,7 @@ impl Text {
         res.scan((), move |(), s| self.lift_slice(s)).fuse()
     }
 
-    pub fn lift_many<'a, I: Iterator<Item = &'a str> + 'a, F: Fn(&str) -> I>(
+    pub fn lift_many<'a, I: Iterator<Item = &'a str> + 'a, F: Fn(&'a str) -> I>(
         &'a self,
         f: F,
     ) -> impl Iterator<Item = Text> + 'a {
@@ -283,9 +283,9 @@ mod tests {
         let t = Text::new("A:B:C:D");
         let lifted: Vec<Text> = t.lift_many(|s| s.split(":")).collect();
         assert_eq!(4, lifted.len());
-        assert_eq!("A", lifted[0]);
-        assert_eq!("B", lifted[1]);
-        assert_eq!("C", lifted[2]);
-        assert_eq!("D", lifted[3]);
+        assert_eq!("A", lifted[0].as_str());
+        assert_eq!("B", lifted[1].as_str());
+        assert_eq!("C", lifted[2].as_str());
+        assert_eq!("D", lifted[3].as_str());
     }
 }
