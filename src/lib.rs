@@ -196,28 +196,28 @@ impl Text {
         get_offset(self.as_str(), slice).map(|offset| self.substring(offset, slice.len()))
     }
 
-    pub fn lift<F: Fn(&str) -> &str>(&self, f: F) -> Option<Text> {
+    pub fn try_lift<F: Fn(&str) -> &str>(&self, f: F) -> Option<Text> {
         let s = self.as_str();
         let res = f(s);
         self.lift_slice(res)
     }
 
-    pub fn try_lift<F: Fn(&str) -> &str>(&self, f: F) -> Text {
+    pub fn lift<F: Fn(&str) -> &str>(&self, f: F) -> Text {
         let s = self.as_str();
         let res = f(s);
         self.lift_slice(res).unwrap_or_else(|| Text::new(res))
     }
 
-    pub fn lift_many<'a, I: Iterator<Item = &'a str> + 'a, F: Fn(&str) -> I>(
+    pub fn try_lift_many<'a, I: Iterator<Item = &'a str> + 'a, F: Fn(&str) -> I>(
         &'a self,
         f: F,
     ) -> impl Iterator<Item = Text> + 'a {
         let s = self.as_str();
         let res = f(s);
-        res.map(move |s| self.lift_slice(s).expect("Failed to lift slice"))
+        res.scan((), move |(), s| self.lift_slice(s)).fuse()
     }
 
-    pub fn try_lift_many<'a, I: Iterator<Item = &'a str> + 'a, F: Fn(&str) -> I>(
+    pub fn lift_many<'a, I: Iterator<Item = &'a str> + 'a, F: Fn(&str) -> I>(
         &'a self,
         f: F,
     ) -> impl Iterator<Item = Text> + 'a {
@@ -274,7 +274,7 @@ mod tests {
     #[test]
     pub fn test_lift() {
         let t = Text::new(" TEST  ");
-        let trimmed = t.lift(|t| t.trim()).expect("Lifting failed");
+        let trimmed = t.try_lift(|t| t.trim()).expect("Lifting failed");
         assert_eq!("TEST", trimmed.as_str());
     }
 
