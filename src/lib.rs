@@ -129,7 +129,7 @@ impl<'a> Iterator for SplitIter<'a> {
         match self.text.as_str()[self.position..].find(self.find) {
             None => None,
             Some(idx) => {
-                self.position = idx;
+                self.position = idx + self.find.len();
                 Some(self.text.substring(idx, self.find.len()))
             }
         }
@@ -228,7 +228,11 @@ mod tests {
     #[test]
     pub fn test_split() {
         let t = Text::new("a,b,c,d,");
-        let elements: Vec<Text> = t.split(",").collect();
-        assert_eq!(5, elements.len());
+        let mut elements = t.split(",");
+        assert_eq!("a", elements.next().unwrap().as_str());
+        assert_eq!("b", elements.next().unwrap().as_str());
+        assert_eq!("c", elements.next().unwrap().as_str());
+        assert_eq!("d", elements.next().unwrap().as_str());
+        assert_eq!("", elements.next().unwrap().as_str());
     }
 }
