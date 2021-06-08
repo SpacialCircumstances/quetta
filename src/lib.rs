@@ -108,6 +108,14 @@ impl<'a, Idx: SliceIndex<str>> Index<Idx> for &'a Text {
     }
 }
 
+impl<'a, Idx: SliceIndex<str>> Index<Idx> for Text {
+    type Output = Idx::Output;
+
+    fn index(&self, index: Idx) -> &Self::Output {
+        &self.as_str()[index]
+    }
+}
+
 pub struct SplitIter<'a> {
     text: &'a Text,
     position: usize,
@@ -182,5 +190,45 @@ impl Text {
             position: 0,
             find: pat,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Text;
+
+    #[test]
+    pub fn test_slice1() {
+        let t = Text::new("a.b.c");
+        let s1 = t.slice(0, 2);
+        assert_eq!("a.", s1.as_str());
+        assert_eq!(&t[..2], s1.as_str());
+        assert_eq!(&s1, &t.substring(0, 2));
+        assert_eq!(&s1, &Text::new("a."));
+        assert_eq!(2, s1.len());
+        let s2 = t.slice(4, 4);
+        assert_eq!(&t[4..4], s2.as_str());
+        assert_eq!(0, s2.len())
+    }
+
+    #[test]
+    #[should_panic]
+    pub fn test_invalid_slices1() {
+        let t = Text::new("ASDFG");
+        t.substring(4, 5);
+    }
+
+    #[test]
+    #[should_panic]
+    pub fn test_invalid_slices2() {
+        let t = Text::new("ASDFG");
+        t.slice(6, 8);
+    }
+
+    #[test]
+    pub fn test_split() {
+        let t = Text::new("a,b,c,d,");
+        let elements: Vec<Text> = t.split(",").collect();
+        assert_eq!(5, elements.len());
     }
 }
