@@ -88,6 +88,12 @@ impl<'a> From<&'a Text> for &'a str {
     }
 }
 
+impl<'a> From<&'a str> for Text {
+    fn from(t: &'a str) -> Self {
+        Text::new(t)
+    }
+}
+
 impl<'a> AsRef<str> for &'a Text {
     fn as_ref(&self) -> &str {
         self.as_str()
