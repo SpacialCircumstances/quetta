@@ -1,4 +1,5 @@
 use std::borrow::Borrow;
+use std::cmp::Ordering;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::{Hash, Hasher};
 use std::ops::Index;
@@ -67,6 +68,18 @@ impl FromStr for Text {
 impl Hash for Text {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.as_str().hash(state)
+    }
+}
+
+impl PartialOrd for Text {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.as_str().partial_cmp(other.as_str())
+    }
+}
+
+impl Ord for Text {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.as_str().cmp(other.as_str())
     }
 }
 
