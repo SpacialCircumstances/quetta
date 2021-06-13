@@ -192,7 +192,7 @@ impl Text {
         }
     }
 
-    fn lift_slice(&self, slice: &str) -> Option<Text> {
+    pub fn lift_slice(&self, slice: &str) -> Option<Text> {
         get_offset(self.as_str(), slice).map(|offset| self.substring(offset, slice.len()))
     }
 
