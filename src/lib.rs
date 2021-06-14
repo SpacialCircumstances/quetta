@@ -1,3 +1,20 @@
+//! **quetta** (from the Quenya word for "word") is a library providing simple
+//! immutable strings in Rust.
+//! Essentially, it is a wrapper around `Rc<str>`, but with support for slicing and compatibility features
+//! with `&str`.
+//!
+//! The primary type provided by **quetta** is [`Text`].
+//! [`Text`] can be either a full string or a slice from another [`Text`], but this is of no concern to the user.
+//! [`Text`] is immutable and can be cloned very cheaply.
+//!
+//! # Example
+//! ```
+//!use quetta::Text;
+//!
+//!let t = Text::new("a.b.c");
+//!let s1 = t.slice(0, 2);
+//!assert_eq!("a.", s1.as_str());
+//! ```
 use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::fmt::{Debug, Display, Formatter};
@@ -20,6 +37,9 @@ enum TextData {
     },
 }
 
+/// The primary type of **quetta**, representing an immutable sequence of characters.
+/// Internally, this can be either a full string or a slice into another [`Text`].
+/// Can be cloned cheaply.
 pub struct Text(TextData);
 
 impl Clone for Text {
@@ -136,15 +156,28 @@ impl<'a, Idx: SliceIndex<str>> Index<Idx> for Text {
 }
 
 impl Text {
+    /// Creates a new [`Text`] by copying the provided slice.
     pub fn new<'a, I: Into<&'a str>>(s: I) -> Self {
         let inner = IString(Rc::from(s.into()));
         Self(TextData::Entire(inner))
     }
 
+    /// Gets the [`Text`] as a slice.
     pub fn as_str(&self) -> &str {
         self.into()
     }
 
+    /// Creates another [`Text`] with a provided start code point and length.
+    /// Will panic if the substring exceeds the [`Text`]'s bounds.
+    ///
+    /// # Example
+    /// ```
+    /// use quetta::Text;
+    ///
+    /// let text = Text::new("qwerty");
+    /// let sub = text.substring(0, 2);
+    /// assert_eq!("qw", sub.as_str());
+    /// ```
     pub fn substring(&self, start: usize, len: usize) -> Text {
         if start + len > self.len() {
             panic!("Slice index out of bounds: Length of string is {}, but slice start was {} and slice length was {}", self.len(), start, len)
@@ -167,20 +200,45 @@ impl Text {
         }
     }
 
+    /// Creates another [`Text`] with a provided start code point and end code point, similar to the slice operator.
+    /// Will panic if the slice exceeds the [`Text`]'s bounds.
+    ///
+    /// # Example
+    /// ```
+    /// use quetta::Text;
+    ///
+    /// let text = Text::new("qwerty");
+    /// let sub = text.slice(1, 3);
+    /// assert_eq!("we", sub.as_str());
+    /// ```
     pub fn slice(&self, start: usize, end: usize) -> Text {
         self.substring(start, end - start)
     }
 
+    /// Gets the length of the [`Text`].
+    ///
+    /// # Example
+    /// ```
+    /// use quetta::Text;
+    ///
+    /// let text = Text::new("I was born in a water moon");
+    /// assert_eq!(26, text.len());
+    /// ```
     pub fn len(&self) -> usize {
         self.as_str().len()
     }
 
+    /// Is this [`Text`] empty?
+    ///
+    /// # Example
+    /// ```
+    /// use quetta::Text;
+    ///
+    /// let text = Text::default();
+    /// assert!(text.is_empty());
+    /// ```
     pub fn is_empty(&self) -> bool {
         self.as_str().is_empty()
-    }
-
-    pub fn chars<'a>(&'a self) -> impl Iterator<Item = char> + 'a {
-        self.as_str().chars()
     }
 
     pub fn lift_slice(&self, slice: &str) -> Option<Text> {
