@@ -9,11 +9,11 @@
 //!
 //! # Example
 //! ```
-//!use quetta::Text;
+//! use quetta::Text;
 //!
-//!let t = Text::new("a.b.c");
-//!let s1 = t.slice(0, 2);
-//!assert_eq!("a.", s1.as_str());
+//! let t = Text::new("a.b.c");
+//! let s1 = t.slice(0, 2);
+//! assert_eq!("a.", s1.as_str());
 //! ```
 use std::borrow::Borrow;
 use std::cmp::Ordering;
@@ -241,22 +241,71 @@ impl Text {
         self.as_str().is_empty()
     }
 
+    /// Attempt to create a [`Text`] from a slice sliced from this [`Text`].
+    /// Will return `None` if the `slice` is not contained in `self`.
+    ///
+    /// # Example
+    /// ```
+    /// use quetta::Text;
+    ///
+    /// let text = Text::new("Test");
+    /// let s = &text.as_str()[0..2];
+    /// let st = text.lift_slice(s);
+    /// assert!(st.is_some());
+    /// assert_eq!("Te", st.unwrap().as_str());
+    /// ```
     pub fn lift_slice(&self, slice: &str) -> Option<Text> {
         get_offset(self.as_str(), slice).map(|offset| self.substring(offset, slice.len()))
     }
 
+    /// Lifts a function `&str -> &str` so it will be executed on the `&str` self.
+    /// Will return none if the `&str` returned by the function is not contained in `self`.
+    ///
+    /// # Example
+    /// ```
+    /// use quetta::Text;
+    ///
+    /// let text = Text::new("  a  ");
+    /// let trimmed = text.try_lift(|t| t.trim())?;
+    /// assert_eq!("a", trimmed.as_str());
+    /// ```
     pub fn try_lift<F: Fn(&str) -> &str>(&self, f: F) -> Option<Text> {
         let s = self.as_str();
         let res = f(s);
         self.lift_slice(res)
     }
 
+    /// Lifts a function `&str -> &str` so it will be executed on the `&str` self.
+    /// If the returned `&str` is not contained in `self`, a new [`Text`] will be created from it.
+    ///
+    /// # Example
+    /// ```
+    /// use quetta::Text;
+    ///
+    /// let text = Text::new("  a  ");
+    /// let trimmed = text.try_lift(|t| t.trim())?;
+    /// assert_eq!("a", trimmed.as_str());
+    /// ```
     pub fn lift<F: Fn(&str) -> &str>(&self, f: F) -> Text {
         let s = self.as_str();
         let res = f(s);
         self.lift_slice(res).unwrap_or_else(|| Text::new(res))
     }
 
+    /// Lifts a function `&str -> Iterator<Item=&str>` so it will be executed on `self` and returns an `Iterator<Item=[`Text`]>`.
+    /// If one of the `&str` in the iterator is not contained in `self`, the iterator will end.
+    ///
+    /// # Example
+    /// ```
+    /// use quetta::Text;
+    /// let t = Text::new("A:B:C:D");
+    /// let lifted: Vec<Text> = t.try_lift_many(|s| s.split(":")).collect();
+    /// assert_eq!(4, lifted.len());
+    /// assert_eq!("A", lifted[0].as_str());
+    /// assert_eq!("B", lifted[1].as_str());
+    /// assert_eq!("C", lifted[2].as_str());
+    /// assert_eq!("D", lifted[3].as_str());
+    /// ```
     pub fn try_lift_many<'a, I: Iterator<Item = &'a str> + 'a, F: Fn(&'a str) -> I>(
         &'a self,
         f: F,
@@ -266,6 +315,20 @@ impl Text {
         res.scan((), move |(), s| self.lift_slice(s)).fuse()
     }
 
+    /// Lifts a function `&str -> Iterator<Item=&str>` so it will be executed on `self` and returns an `Iterator<Item=[`Text`]>`.
+    /// If the iterator yields a `&str` that is not contained within `self`, a new [`Text`] will be created from it.
+    ///
+    /// # Example
+    /// ```
+    /// use quetta::Text;
+    /// let t = Text::new("A:B:C:D");
+    /// let lifted: Vec<Text> = t.lift_many(|s| s.split(":")).collect();
+    /// assert_eq!(4, lifted.len());
+    /// assert_eq!("A", lifted[0].as_str());
+    /// assert_eq!("B", lifted[1].as_str());
+    /// assert_eq!("C", lifted[2].as_str());
+    /// assert_eq!("D", lifted[3].as_str());
+    /// ```
     pub fn lift_many<'a, I: Iterator<Item = &'a str> + 'a, F: Fn(&'a str) -> I>(
         &'a self,
         f: F,
