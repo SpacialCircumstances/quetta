@@ -250,12 +250,28 @@ impl Text {
     ///
     /// let text = Text::new("Test");
     /// let s = &text.as_str()[0..2];
-    /// let st = text.lift_slice(s);
+    /// let st = text.try_lift_slice(s);
     /// assert!(st.is_some());
     /// assert_eq!("Te", st.unwrap().as_str());
     /// ```
-    pub fn lift_slice(&self, slice: &str) -> Option<Text> {
+    pub fn try_lift_slice(&self, slice: &str) -> Option<Text> {
         get_offset(self.as_str(), slice).map(|offset| self.substring(offset, slice.len()))
+    }
+
+    /// Creates a [`Text`] from a slice, if possible, as a substring of `self`.
+    ///
+    /// # Example
+    /// ```
+    /// use quetta::Text;
+    ///
+    /// let text = Text::new("Test");
+    /// let s = &text.as_str()[0..2];
+    /// let st = text.lift_slice(s);
+    /// assert_eq!("Te", st.as_str());
+    /// ```
+    pub fn lift_slice(&self, slice: &str) -> Text {
+        self.try_lift_slice(slice)
+            .unwrap_or_else(|| Text::new(slice))
     }
 
     /// Lifts a function `&str -> &str` so it will be executed on the `&str` self.
@@ -272,7 +288,7 @@ impl Text {
     pub fn try_lift<F: Fn(&str) -> &str>(&self, f: F) -> Option<Text> {
         let s = self.as_str();
         let res = f(s);
-        self.lift_slice(res)
+        self.try_lift_slice(res)
     }
 
     /// Lifts a function `&str -> &str` so it will be executed on the `&str` self.
@@ -289,7 +305,7 @@ impl Text {
     pub fn lift<F: Fn(&str) -> &str>(&self, f: F) -> Text {
         let s = self.as_str();
         let res = f(s);
-        self.lift_slice(res).unwrap_or_else(|| Text::new(res))
+        self.try_lift_slice(res).unwrap_or_else(|| Text::new(res))
     }
 
     /// Lifts a function `&str -> Iterator<Item=&str>` so it will be executed on `self` and returns an `Iterator<Item=[`Text`]>`.
@@ -312,7 +328,7 @@ impl Text {
     ) -> impl Iterator<Item = Text> + 'a {
         let s = self.as_str();
         let res = f(s);
-        res.scan((), move |(), s| self.lift_slice(s)).fuse()
+        res.scan((), move |(), s| self.try_lift_slice(s)).fuse()
     }
 
     /// Lifts a function `&str -> Iterator<Item=&str>` so it will be executed on `self` and returns an `Iterator<Item=[`Text`]>`.
@@ -335,7 +351,7 @@ impl Text {
     ) -> impl Iterator<Item = Text> + 'a {
         let s = self.as_str();
         let res = f(s);
-        res.map(move |s| self.lift_slice(s).unwrap_or_else(|| Text::new(s)))
+        res.map(move |s| self.try_lift_slice(s).unwrap_or_else(|| Text::new(s)))
     }
 }
 
