@@ -127,13 +127,13 @@ impl<'a> From<&'a str> for Text {
     }
 }
 
-impl<'a> AsRef<str> for &'a Text {
+impl AsRef<str> for Text {
     fn as_ref(&self) -> &str {
         self.as_str()
     }
 }
 
-impl<'a> Borrow<str> for &'a Text {
+impl Borrow<str> for Text {
     fn borrow(&self) -> &str {
         self.as_str()
     }
