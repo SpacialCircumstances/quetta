@@ -1,5 +1,9 @@
 # quetta
 
+[![Crate](https://img.shields.io/crates/v/quetta.svg)](https://crates.io/crates/quetta)
+[![API](https://docs.rs/quetta/badge.svg)](https://docs.rs/quetta)
+[![License](https://img.shields.io/crates/l/quetta.svg)](https://github.com/SpacialCircumstances/quetta/blob/main/LICENSE)
+
 (from the Quenya word for "word") is a library providing simple
 immutable strings in Rust.
 Essentially, it is a wrapper around `Arc<str>`, but with support for slicing and compatibility features
