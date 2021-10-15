@@ -20,12 +20,12 @@ use std::cmp::Ordering;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::{Hash, Hasher};
 use std::ops::Index;
-use std::rc::Rc;
 use std::slice::SliceIndex;
 use std::str::FromStr;
+use std::sync::Arc;
 
 #[derive(Clone)]
-struct IString(Rc<str>);
+struct IString(Arc<str>);
 
 #[derive(Clone)]
 enum TextData {
@@ -158,7 +158,7 @@ impl<'a, Idx: SliceIndex<str>> Index<Idx> for Text {
 impl Text {
     /// Creates a new [`Text`] by copying the provided slice.
     pub fn new<'a, I: Into<&'a str>>(s: I) -> Self {
-        let inner = IString(Rc::from(s.into()));
+        let inner = IString(Arc::from(s.into()));
         Self(TextData::Entire(inner))
     }
 
