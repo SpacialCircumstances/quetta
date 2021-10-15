@@ -1,6 +1,6 @@
 //! **quetta** (from the Quenya word for "word") is a library providing simple
 //! immutable strings in Rust.
-//! Essentially, it is a wrapper around `Rc<str>`, but with support for slicing and compatibility features
+//! Essentially, it is a wrapper around `Arc<str>`, but with support for slicing and compatibility features
 //! with `&str`.
 //!
 //! The primary type provided by **quetta** is [`Text`].
